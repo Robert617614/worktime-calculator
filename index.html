@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f7fb">
+<title>每日工時計算器</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#202b3c;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;padding:20px 14px}.card{max-width:460px;margin:32px auto;background:white;padding:24px;border:1px solid #e5eaf1;border-radius:22px;box-shadow:0 10px 32px #14213d09}h1{font-size:24px;margin:0 0 7px}.subtitle{font-size:14px;color:#667085;margin:0 0 28px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label,legend{font-size:14px;font-weight:600}label{display:block}input[type=time]{margin-top:9px;display:block;min-width:0;width:100%;border:1px solid #cbd3dd;border-radius:12px;padding:13px 8px;font-size:18px;color:#202b3c;background:#fff}fieldset{border:0;padding:0;margin:26px 0 22px}legend{margin-bottom:12px}.choices{display:flex;gap:8px}.choices label{flex:1;cursor:pointer}.choices input{position:absolute;opacity:0}.choices span{display:block;text-align:center;border:1px solid #cbd3dd;border-radius:10px;padding:12px 2px;font-size:13px}.choices input:checked+span{background:#eaf2ff;border-color:#376cc9;color:#1e55af}.choices input:focus-visible+span{outline:2px solid #376cc9;outline-offset:2px}.answer{background:#f3f7fd;border-radius:15px;text-align:center;padding:24px 8px}.answer p{color:#667085;font-size:14px;margin:0}.answer strong{display:block;font-size:51px;font-variant-numeric:tabular-nums;margin:8px 0}.answer small{color:#667085}button{margin-top:18px;background:#245eb9;color:white;border:0;border-radius:12px;padding:14px;font-weight:600;font-size:16px;width:100%}.note{font-size:12px;color:#667085;line-height:1.65;margin:17px 0 0}@media(max-width:350px){.card{padding:16px}.answer strong{font-size:43px}}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>◷ 每日工時計算器</h1><p class="subtitle">輸入上下班時間，自動計算實際工時</p>
+<div class="grid"><label>上班時間<input type="time" id="start" value="06:57"></label><label>下班時間<input type="time" id="end" value="20:11"></label></div>
+<fieldset><legend>用餐扣除時間</legend><div class="choices">
+<label><input type="radio" name="meal" value="0"><span>不扣除</span></label>
+<label><input type="radio" name="meal" value="30" checked><span>30 分鐘</span></label>
+<label><input type="radio" name="meal" value="60"><span>60 分鐘</span></label>
+</div></fieldset>
+<div class="answer" aria-live="polite"><p>今日實際工時</p><strong id="result">--:--</strong><small id="detail">正在計算</small><p id="deduct" style="margin-top:10px"></p></div>
+<button type="button" id="reset">↺ 重設範例</button>
+<p class="note">支援跨午夜下班；上下班時間相同視為 0 小時。此工具不會上傳或儲存輸入資料。</p>
+<p id="status" class="note" style="color:#b42318">JavaScript 尚未執行；請從正式網頁網址開啟。</p>
+</main>
+<script>
+(function(){
+"use strict";
+const start=document.getElementById("start"),end=document.getElementById("end"),output=document.getElementById("result"),detail=document.getElementById("detail"),deduct=document.getElementById("deduct"),radios=Array.from(document.querySelectorAll('input[name="meal"]'));
+function toMin(t){const m=/^(\d{1,2}):(\d{2})$/.exec(t);if(!m)return null;const h=Number(m[1]),n=Number(m[2]);return h<24&&n<60?h*60+n:null;}
+function calc(){
+const a=toMin(start.value),b=toMin(end.value),selected=radios.find(r=>r.checked),meal=selected?Number(selected.value):30;
+deduct.textContent=meal?"已扣除用餐 "+meal+" 分鐘":"未扣除用餐時間";
+if(a===null||b===null){output.textContent="--:--";detail.textContent="請輸入完整時間";return;}
+const elapsed=(b-a+1440)%1440,total=Math.max(0,elapsed-meal),hours=Math.floor(total/60),minutes=total%60;
+output.textContent=String(hours).padStart(2,"0")+":"+String(minutes).padStart(2,"0");
+detail.textContent=hours+" 小時 "+minutes+" 分鐘 · "+(total/60).toFixed(2)+" 小時";
+}
+for(const el of [start,end])for(const event of ["input","change"])el.addEventListener(event,calc);
+for(const radio of radios)for(const event of ["click","change"])radio.addEventListener(event,calc);
+document.getElementById("reset").addEventListener("click",()=>{start.value="06:57";end.value="20:11";radios.find(r=>r.value==="30").checked=true;calc();});
+const status=document.getElementById("status");status.textContent="互動功能已啟用";status.style.color="#28704a";calc();
+})();
+</script>
+</body>
+</html>
